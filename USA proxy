@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxy · web UI</title>
+    <!-- Font Awesome 6 (free) for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ----- CSS reset & base ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f0f4fa 0%, #e6ecf5 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        /* ----- main card / glassmorphism ----- */
+        .proxy-card {
+            width: 100%;
+            max-width: 1200px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 2.5rem;
+            box-shadow: 0 30px 50px -20px rgba(0, 20, 40, 0.35),
+                        0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+            padding: 2rem 2rem 1.8rem;
+            transition: all 0.3s ease;
+        }
+
+        /* ----- header area with status & user ----- */
+        .proxy-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, #1b2f4f, #0f1e2e);
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            color: #7ad0ff;
+            font-size: 1.8rem;
+            box-shadow: 0 10px 18px -8px rgba(0, 40, 80, 0.4);
+        }
+
+        .logo-text h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #0b1b2b;
+            line-height: 1.2;
+        }
+
+        .logo-text span {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #4f6a83;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .live-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #26c281;
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px rgba(38, 194, 129, 0.2);
+            animation: pulse 1.8s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 0.8; transform: scale(1); }
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 0.6rem 1.2rem 0.6rem 0.8rem;
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.1);
+        }
+
+        .avatar {
+            background: #1a3148;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 12px -6px rgba(0, 20, 40, 0.3);
+        }
+
+        .user-info .name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #0f1e2e;
+        }
+
+        .user-info .role {
+            font-size: 0.75rem;
+            color: #3d5b77;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* ----- main stats grid (cards) ----- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(4px);
+            border-radius: 1.8rem;
+            padding: 1.4rem 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 18px -10px rgba(0, 20, 30, 0.15);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 24px -12px rgba(20, 50, 80, 0.25);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-header i {
+            font-size: 1.6rem;
+            color: #2b4b6e;
+            background: rgba(43, 75, 110, 0.08);
+            padding: 8px;
+            border-radius: 14px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #4f6a83;
+            letter-spacing: 0.3px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0b1b2b;
+            line-height: 1.2;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .stat-unit {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #627d99;
+        }
+
+        .trend {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 40px;
+            background: rgba(38, 194, 129, 0.12);
+            color: #1f8a5c;
+        }
+
+        /* ----- proxy control panel ----- */
+        .control-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.8rem;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 2rem;
+            padding: 1.8rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 12px 24px -16px rgba(0, 20, 30, 0.2);
+            backdrop-filter: blur(4px);
+        }
+
+        .settings-group {
+            flex: 1 1 260px;
+            min-width: 220px;
+        }
+
+        .settings-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #4a6885;
+            margin-bottom: 0.6rem;
+        }
+
+        .proxy-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffffd9;
+            padding: 0.5rem 0.5rem 0.5rem 1rem;
+            border-radius: 60px;
+            border: 1px solid #cbdae7;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .proxy-selector i {
+            color: #2b4b6e;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .proxy-selector select {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: #0f1e2e;
+            outline: none;
+            padding: 0.6rem 0;
+            cursor: pointer;
+            appearance: none;
+        }
+
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffffd9;
+            padding: 0.4rem 0.4rem 0.4rem 1rem;
+            border-radius: 60px;
+            border: 1px solid #cbdae7;
+        }
+
+        .toggle-label {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #1e3a5a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toggle-label i {
+            color: #3980c0;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #c1d3e3;
+            transition: .25s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .25s;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked + .slider {
+            background: linear-gradient(135deg, #1b4c7c, #0e2e4a);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        /* address bar + connect button */
+        .address-bar {
+            display: flex;
+            align-items: center;
+            background: #ffffffd9;
+            border-radius: 60px;
+            padding: 0.35rem 0.35rem 0.35rem 1.4rem;
+            border: 1px solid #cbdae7;
+            flex: 2 1 320px;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .address-bar i {
+            color: #4d7396;
+            font-size: 1rem;
+        }
+
+        .address-bar input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 0.8rem 0.6rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #0f1e2e;
+            outline: none;
+        }
+
+        .address-bar input::placeholder {
+            color: #8fa6bb;
+            font-weight: 400;
+        }
+
+        .connect-btn {
+            background: #0b1e2f;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 0.8rem 1.8rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 8px 16px -8px rgba(0, 30, 60, 0.5);
+            white-space: nowrap;
+        }
+
+        .connect-btn i {
+            font-size: 0.9rem;
+        }
+
+        .connect-btn:hover {
+            background: #1b3652;
+            transform: scale(1.01);
+            box-shadow: 0 12px 18px -8px #0b1e2f;
+        }
+
+        .connect-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* ----- logs / activity table ----- */
+        .activity-section {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(4px);
+            border-radius: 1.8rem;
+            padding: 1.4rem 1.6rem 1.6rem;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 22px -14px rgba(0, 0, 0, 0.15);
+            margin-top: 0.6rem;
+        }
+
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .activity-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0b1b2b;
+            letter-spacing: -0.2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .activity-header h3 i {
+            color: #2b4b6e;
+            font-size: 1.1rem;
+        }
+
+        .live-tag {
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(38, 194, 129, 0.12);
+            color: #1f8a5c;
+            padding: 4px 10px;
+            border-radius: 40px;
+            letter-spacing: 0.4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .live-tag i {
+            font-size: 0.6rem;
+        }
+
+        .log-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .log-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 0.7rem 1.2rem;
+            border-radius: 60px;
+            font-size: 0.88rem;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: background 0.15s;
+        }
+
+        .log-item:hover {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .log-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 2;
+            min-width: 0;
+        }
+
+        .log-left i {
+            width: 20px;
+            color: #3d6b95;
+            font-size: 0.9rem;
+        }
+
+        .log-url {
+            font-weight: 500;
+            color: #122c42;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .log-status {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 40px;
+            background: #deecf7;
+            color: #1b4c7c;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .log-status.success {
+            background: rgba(38, 194, 129, 0.15);
+            color: #1b7a4a;
+        }
+
+        .log-time {
+            font-size: 0.75rem;
+            color: #637e99;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .log-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* scrollbar */
+        .log-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .log-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 10px;
+        }
+
+        .log-list::-webkit-scrollbar-thumb {
+            background: #b6cbd9;
+            border-radius: 10px;
+        }
+
+        /* responsive touches */
+        @media (max-width: 680px) {
+            .proxy-card {
+                padding: 1.5rem;
+            }
+
+            .control-panel {
+                padding: 1.2rem;
+                gap: 1.2rem;
+            }
+
+            .stat-value {
+                font-size: 1.6rem;
+            }
+
+            .user-badge {
+                padding: 0.4rem 0.8rem 0.4rem 0.6rem;
+            }
+
+            .avatar {
+                width: 34px;
+                height: 34px;
+                font-size: 0.9rem;
+            }
+
+            .connect-btn {
+                padding: 0.7rem 1.2rem;
+                font-size: 0.8rem;
+            }
+
+            .log-item {
+                flex-wrap: wrap;
+                gap: 6px;
+                border-radius: 30px;
+            }
+
+            .log-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="proxy-card">
+        <!-- ========== HEADER ========== -->
+        <header class="proxy-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fas fa-shield-hal"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>ProxyCore</h1>
+                    <span>
+                        <i class="fas fa-circle live-dot" style="font-size: 0.5rem; color: #26c281;"></i>
+                        secure tunnel · active
+                    </span>
+                </div>
+            </div>
+            <div class="user-badge">
+                <div class="avatar">JD</div>
+                <div class="user-info">
+                    <div class="name">Jordan Diaz</div>
+                    <div class="role">
+                        <i class="fas fa-crown" style="font-size: 0.6rem; color: #e6b91e;"></i> admin
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ========== STATS CARDS ========== -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Active connections</span>
+                    <i class="fas fa-plug"></i>
+                </div>
+                <div class="stat-value">1,248 <span class="stat-unit">conn</span></div>
+                <span class="trend"><i class="fas fa-arrow-up"></i> 12%</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Throughput</span>
+                    <i class="fas fa-gauge-high"></i>
+                </div>
+                <div class="stat-value">3.8 <span class="stat-unit">Gbps</span></div>
+                <span class="trend"><i class="fas fa-arrow-up"></i> 5.2%</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Latency avg.</span>
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-value">24 <span class="stat-unit">ms</span></div>
+                <span class="trend" style="background: rgba(250, 180, 50, 0.12); color: #b16f1a;"><i class="fas fa-minus"></i> 1ms</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Cache hit</span>
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="stat-value">92<span class="stat-unit">%</span></div>
+                <span class="trend"><i class="fas fa-arrow-up"></i> 3%</span>
+            </div>
+        </div>
+
+        <!-- ========== CONTROL PANEL ========== -->
+        <div class="control-panel">
+            <!-- proxy selector -->
+            <div class="settings-group">
+                <label><i class="fas fa-globe" style="margin-right: 6px;"></i>Proxy region</label>
+                <div class="proxy-selector">
+                    <i class="fas fa-location-dot"></i>
+                    <select id="regionSelect">
+                        <option value="us-east">🇺🇸 US East (N. Virginia)</option>
+                        <option value="eu-central" selected>🇩🇪 EU Central (Frankfurt)</option>
+                        <option value="ap-south">🇸🇬 AP South (Singapore)</option>
+                        <option value="uk">🇬🇧 UK (London)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- toggle + stealth mode -->
+            <div class="settings-group">
+                <label><i class="fas fa-shield" style="margin-right: 6px;"></i>Anonymity level</label>
+                <div class="toggle-wrapper">
+                    <span class="toggle-label"><i class="fas fa-user-secret"></i> Elite proxy</span>
+                    <label class="switch">
+                        <input type="checkbox" id="stealthToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- address bar + connect button -->
+            <div class="address-bar">
+                <i class="fas fa-link"></i>
+                <input type="text" id="proxyAddress" value="https://proxy.proxycore.io:8443" placeholder="Proxy endpoint">
+                <button class="connect-btn" id="connectBtn">
+                    <i class="fas fa-bolt"></i> Connect
+                </button>
+            </div>
+        </div>
+
+        <!-- ========== ACTIVITY / LOGS ========== -->
+        <div class="activity-section">
+            <div class="activity-header">
+                <h3><i class="fas fa-list-ul"></i> Recent proxy traffic</h3>
+                <div class="live-tag">
+                    <i class="fas fa-circle" style="color: #26c281;"></i> live
+                </div>
+            </div>
+            <div class="log-list" id="logContainer">
+                <!-- sample logs, will be populated by JS but static placeholders also fine -->
+                <div class="log-item">
+                    <div class="log-left">
+                        <i class="fas fa-arrow-right"></i>
+                        <span class="log-url">api.github.com/repos/.../events</span>
+                    </div>
+                    <div class="log-right">
+                        <span class="log-status success">200 OK</span>
+                        <span class="log-time">just now</span>
+                    </div>
+                </div>
+                <div class="log-item">
+                    <div class="log-left">
+                        <i class="fas fa-arrow-right"></i>
+                        <span class="log-url">cdn.jsdelivr.net/npm/three@0.160.0</span>
+                    </div>
+                    <div class="log-right">
+                        <span class="log-status success">200 OK</span>
+                        <span class="log-time">2s ago</span>
+                    </div>
+                </div>
+                <div class="log-item">
+                    <div class="log-left">
+                        <i class="fas fa-arrow-right"></i>
+                        <span class="log-url">analytics.proxycore.io/collect</span>
+                    </div>
+                    <div class="log-right">
+                        <span class="log-status">202 ACCEPTED</span>
+                        <span class="log-time">5s ago</span>
+                    </div>
+                </div>
+                <div class="log-item">
+                    <div class="log-left">
+                        <i class="fas fa-arrow-right"></i>
+                        <span class="log-url">fonts.gstatic.com/s/inter/...</span>
+                    </div>
+                    <div class="log-right">
+                        <span class="log-status success">200 OK</span>
+                        <span class="log-time">8s ago</span>
+                    </div>
+                </div>
+                <div class="log-item">
+                    <div class="log-left">
+                        <i class="fas fa-arrow-right"></i>
+                        <span class="log-url">proxy.proxycore.io/health</span>
+                    </div>
+                    <div class="log-right">
+                        <span class="log-status success">200 OK</span>
+                        <span class="log-time">12s ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== JAVASCRIPT ========== -->
+    <script>
+        (function() {
+            // ---------- DOM refs ----------
+            const connectBtn = document.getElementById('connectBtn');
+            const proxyAddressInput = document.getElementById('proxyAddress');
+            const stealthToggle = document.getElementById('stealthToggle');
+            const regionSelect = document.getElementById('regionSelect');
+            const logContainer = document.getElementById('logContainer');
+
+            // ---------- connection state ----------
+            let isConnected = true;   // button initially "Connect", but we want a realistic UI: shows disconnect when connected? 
+            // I'll make it toggle between "Connect" / "Disconnect" state while preserving the layout.
+
+            // set initial button state (connected)
+            function updateConnectButton() {
+                if (isConnected) {
+                    connectBtn.innerHTML = '<i class="fas fa-pause"></i> Disconnect';
+                    connectBtn.style.background = '#3c2a4d'; // deep purple-ish for disconnect
+                    connectBtn.style.boxShadow = '0 8px 16px -8px #2a1a3a';
+                } else {
+                    connectBtn.innerHTML = '<i class="fas fa-bolt"></i> Connect';
+                    connectBtn.style.background = '#0b1e2f';
+                    connectBtn.style.boxShadow = '0 8px 16px -8px #0b1e2f';
+                }
+            }
+            updateConnectButton();
+
+            // ---------- toggle connection status ----------
+            connectBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                isConnected = !isConnected;
+                updateConnectButton();
+
+                // add a log entry (realism)
+                const action = isConnected ? 'connected to' : 'disconnected from';
+                const endpoint = proxyAddressInput.value.trim() || 'proxy.proxycore.io:8443';
+                const statusText = isConnected ? '200 OK' : '204 NO CONTENT';
+                const statusClass = isConnected ? 'success' : '';
+                const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                // create log element
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+                logItem.innerHTML = `
+                    <div class="log-left">
+                        <i class="fas ${isConnected ? 'fa-plug' : 'fa-plug-circle-xmark'}"></i>
+                        <span class="log-url">${action} ${endpoint}</span>
+                    </div>
+                    <div class="log-right">
+                        <span class="log-status ${statusClass}">${statusText}</span>
+                        <span class="log-time">${timeNow}</span>
+                    </div>
+                `;
+
+                // prepend and limit logs to ~8
+                logContainer.prepend(logItem);
+                if (logContainer.children.length > 8) {
+                    logContainer.removeChild(logContainer.lastChild);
+                }
+
+                // Also show a subtle animation on button
+                connectBtn.style.transform = 'scale(0.96)';
+                setTimeout(() => connectBtn.style.transform = '', 120);
+            });
+
+            // ---------- region change log (realism) ----------
+            regionSelect.addEventListener('change', function() {
+                const region = regionSelect.options[regionSelect.selectedIndex].text;
+                const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+                logItem.innerHTML = `
+                    <div class="log-left">
+                        <i class="fas fa-globe"></i>
+                        <span class="log-url">Switched region to ${region}</span>
+                    </div>
+                    <div class="log-right">
+                        <span class="log-status success">200 OK</span>
+                        <span class="log-time">${timeNow}</span>
+                    </div>
+                `;
+                logContainer.prepend(logItem);
+                if (logContainer.children.length > 8) {
+                    logContainer.removeChild(logContainer.lastChild);
+                }
+            });
+
+            // ---------- stealth toggle log ----------
+            stealthToggle.addEventListener('change', function() {
+                const mode = stealthToggle.checked ? 'Elite (anonymous)' : 'Transparent';
+                const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+                logItem.innerHTML = `
+                    <div class="log-left">
+                        <i class="fas fa-user-secret"></i>
+                        <span class="log-url">Anonymity: ${mode}</span>
+                    </div>
+                    <div class="log-right">
+                        <span class="log-status">202 ACCEPTED</span>
+                        <span class="log-time">${timeNow}</span>
+                    </div>
+                `;
+                logContainer.prepend(logItem);
+                if (logContainer.children.length > 8) {
+                    logContainer.removeChild(logContainer.lastChild);
+                }
+            });
+
+            // ---------- address input: enter key adds log ----------
+            proxyAddressInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const newAddr = proxyAddressInput.value.trim();
+                    if (newAddr) {
+                        const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        const logItem = document.createElement('div');
+                        logItem.className = 'log-item';
+                        logItem.innerHTML = `
+                            <div class="log-left">
+                                <i class="fas fa-pen"></i>
+                                <span class="log-url">Endpoint set to ${newAddr}</span>
+                            </div>
+                            <div class="log-right">
+                                <span class="log-status success">200 OK</span>
+                                <span class="log-time">${timeNow}</span>
+                            </div>
+                        `;
+                        logContainer.prepend(logItem);
+                        if (logContainer.children.length > 8) {
+                            logContainer.removeChild(logContainer.lastChild);
+                        }
+                    }
+                }
+            });
+
+            // ---------- initial dynamic: mimic fresh log entries every few seconds ----------
+            const fakeUrls = [
+                'api.proxycore.io/v1/status',
+                'cdn.sstatic.net/stackoverflow',
+                'raw.githubusercontent.com/...',
+                'images.unsplash.com/photo-...',
+                'api.stripe.com/v3/charges',
+                'fonts.gstatic.com/s/roboto',
+                'analytics.google.com/collect',
+                'proxy.proxycore.io/metrics',
+            ];
+
+            setInterval(() => {
+                if (!isConnected) return; // only generate logs if connected
+
+                const randomUrl = fakeUrls[Math.floor(Math.random() * fakeUrls.length)];
+                const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const statusOptions = ['200 OK', '200 OK', '200 OK', '304 NOT MODIFIED', '201 CREATED', '202 ACCEPTED'];
+                const randomStatus = statusOptions[Math.floor(Math.random() * statusOptions.length)];
+                const isSuccess = randomStatus.includes('200') || randomStatus.includes('201') || randomStatus.includes('202') || randomStatus.includes('304');
+                const statusClass = isSuccess ? 'success' : '';
+
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+                logItem.innerHTML = `
+                    <div class="log-left">
+                        <i class="fas fa-arrow-right"></i>
+                        <span class="log-url">${randomUrl}</span>
+                    </div>
+                    <div class="log-right">
+                        <span class="log-status ${statusClass}">${randomStatus}</span>
+                        <span class="log-time">${timeNow}</span>
+                    </div>
+                `;
+
+                logContainer.prepend(logItem);
+                if (logContainer.children.length > 8) {
+                    logContainer.removeChild(logContainer.lastChild);
+                }
+            }, 4500); // every 4.5 seconds
+        })();
+    </script>
+</body>
+</html>
